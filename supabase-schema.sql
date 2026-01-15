@@ -1,0 +1,370 @@
+-- =====================================================
+-- ERP Daya Padi Abadi - Supabase Database Schema
+-- =====================================================
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- =====================================================
+-- SUPPLIERS TABLE
+-- =====================================================
+CREATE TABLE suppliers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    contact VARCHAR(255),
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    address TEXT,
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- CUSTOMERS TABLE
+-- =====================================================
+CREATE TABLE customers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    contact VARCHAR(255),
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    address TEXT,
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- MACHINES TABLE
+-- =====================================================
+CREATE TABLE machines (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(100),
+    category VARCHAR(50) DEFAULT 'production', -- 'production' or 'supporting'
+    status VARCHAR(50) DEFAULT 'operational',
+    location VARCHAR(255),
+    purchase_date DATE,
+    last_maintenance DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- INVENTORY TABLE
+-- =====================================================
+CREATE TABLE inventory (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code VARCHAR(100) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    stock DECIMAL(10,2) DEFAULT 0,
+    min_stock DECIMAL(10,2) DEFAULT 0,
+    max_stock DECIMAL(10,2) DEFAULT 0,
+    unit VARCHAR(50),
+    location VARCHAR(255),
+    price_per_unit DECIMAL(15,2) DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- PRODUCTION MODULE TABLES
+-- =====================================================
+
+-- Downtime Records
+CREATE TABLE downtime (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    machine VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL, -- 'Planned' or 'Unplanned'
+    reason TEXT NOT NULL,
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE,
+    duration DECIMAL(10,2), -- in hours
+    technician VARCHAR(255),
+    notes TEXT,
+    status VARCHAR(50) DEFAULT 'completed',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Stock Management
+CREATE TABLE stock (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code VARCHAR(100) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL, -- 'raw', 'wip', 'finished', 'sparepart'
+    stock DECIMAL(10,2) DEFAULT 0,
+    min_stock DECIMAL(10,2) DEFAULT 0,
+    max_stock DECIMAL(10,2) DEFAULT 0,
+    unit VARCHAR(50),
+    location VARCHAR(255),
+    price_per_unit DECIMAL(15,2) DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Maintenance Schedule
+CREATE TABLE maintenance_schedule (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    machine VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL, -- 'Preventive' or 'Corrective'
+    task TEXT NOT NULL,
+    scheduled_date DATE NOT NULL,
+    status VARCHAR(50) DEFAULT 'upcoming', -- 'upcoming', 'in_progress', 'completed'
+    technician VARCHAR(255),
+    estimated_duration DECIMAL(10,2), -- in hours
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Production Records
+CREATE TABLE production (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    work_order_number VARCHAR(100) UNIQUE NOT NULL,
+    product VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL,
+    unit VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'pending',
+    start_date DATE,
+    end_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- SALES MODULE TABLES
+-- =====================================================
+
+-- Sales Orders
+CREATE TABLE sales_orders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_number VARCHAR(100) UNIQUE NOT NULL,
+    customer_id UUID REFERENCES customers(id),
+    customer_name VARCHAR(255),
+    order_date DATE NOT NULL,
+    delivery_date DATE,
+    total_amount DECIMAL(15,2) DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending',
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Invoices
+CREATE TABLE invoices (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    number VARCHAR(100) UNIQUE NOT NULL,
+    customer_id UUID REFERENCES customers(id),
+    customer_name VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    due_date DATE NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'paid', 'overdue'
+    so_number VARCHAR(100),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- PIC (Person In Charge)
+CREATE TABLE pic (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    customer_id UUID REFERENCES customers(id),
+    customer_name VARCHAR(255) NOT NULL,
+    position VARCHAR(255),
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    last_contact DATE,
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- FINANCE MODULE TABLES
+-- =====================================================
+
+-- Expenses
+CREATE TABLE expenses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    date DATE NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    payment_method VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'paid',
+    vendor VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Purchase Orders
+CREATE TABLE purchase_orders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    po_number VARCHAR(100) UNIQUE NOT NULL,
+    supplier_id UUID REFERENCES suppliers(id),
+    supplier_name VARCHAR(255),
+    order_date DATE NOT NULL,
+    delivery_date DATE,
+    total_amount DECIMAL(15,2) DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending',
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- HRD MODULE TABLES
+-- =====================================================
+
+-- Employees
+CREATE TABLE employees (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    position VARCHAR(255) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    age INTEGER,
+    gender VARCHAR(20),
+    education VARCHAR(50),
+    hire_date DATE,
+    tenure INTEGER, -- in years
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    salary DECIMAL(15,2),
+    status VARCHAR(50) DEFAULT 'active',
+    -- Performance metrics
+    attendance INTEGER DEFAULT 90,
+    productivity INTEGER DEFAULT 85,
+    quality INTEGER DEFAULT 85,
+    teamwork INTEGER DEFAULT 85,
+    discipline INTEGER DEFAULT 85,
+    score INTEGER DEFAULT 85,
+    performance_status VARCHAR(50) DEFAULT 'good',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Attendance
+CREATE TABLE attendance (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employee_id UUID REFERENCES employees(id) ON DELETE CASCADE,
+    employee_name VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    clock_in TIME,
+    clock_out TIME,
+    status VARCHAR(50) NOT NULL, -- 'present', 'late', 'sick', 'absent'
+    overtime DECIMAL(10,2) DEFAULT 0,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(employee_id, date)
+);
+
+-- Maintenance (legacy)
+CREATE TABLE maintenance (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    machine_id UUID REFERENCES machines(id),
+    machine_name VARCHAR(255),
+    maintenance_type VARCHAR(100),
+    scheduled_date DATE,
+    completed_date DATE,
+    status VARCHAR(50) DEFAULT 'scheduled',
+    cost DECIMAL(15,2),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
+-- INDEXES FOR PERFORMANCE
+-- =====================================================
+
+CREATE INDEX idx_downtime_machine ON downtime(machine);
+CREATE INDEX idx_downtime_date ON downtime(start_time);
+CREATE INDEX idx_stock_category ON stock(category);
+CREATE INDEX idx_maintenance_schedule_date ON maintenance_schedule(scheduled_date);
+CREATE INDEX idx_invoices_status ON invoices(status);
+CREATE INDEX idx_invoices_date ON invoices(date);
+CREATE INDEX idx_expenses_date ON expenses(date);
+CREATE INDEX idx_expenses_category ON expenses(category);
+CREATE INDEX idx_attendance_date ON attendance(date);
+CREATE INDEX idx_attendance_employee ON attendance(employee_id);
+CREATE INDEX idx_employees_department ON employees(department);
+
+-- =====================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- =====================================================
+
+-- Enable RLS on all tables
+ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE machines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE downtime ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stock ENABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance_schedule ENABLE ROW LEVEL SECURITY;
+ALTER TABLE production ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sales_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pic ENABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE purchase_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance ENABLE ROW LEVEL SECURITY;
+
+-- Create policies (allow all operations for authenticated users)
+-- You can customize these based on your security requirements
+
+CREATE POLICY "Enable all for authenticated users" ON suppliers FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON customers FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON machines FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON inventory FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON downtime FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON stock FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON maintenance_schedule FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON production FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON sales_orders FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON invoices FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON pic FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON expenses FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON purchase_orders FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON employees FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON attendance FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated users" ON maintenance FOR ALL USING (auth.role() = 'authenticated');
+
+-- =====================================================
+-- FUNCTIONS AND TRIGGERS
+-- =====================================================
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create triggers for all tables
+CREATE TRIGGER update_suppliers_updated_at BEFORE UPDATE ON suppliers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_customers_updated_at BEFORE UPDATE ON customers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_machines_updated_at BEFORE UPDATE ON machines FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_inventory_updated_at BEFORE UPDATE ON inventory FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_downtime_updated_at BEFORE UPDATE ON downtime FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_stock_updated_at BEFORE UPDATE ON stock FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_maintenance_schedule_updated_at BEFORE UPDATE ON maintenance_schedule FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_production_updated_at BEFORE UPDATE ON production FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_sales_orders_updated_at BEFORE UPDATE ON sales_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_invoices_updated_at BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_pic_updated_at BEFORE UPDATE ON pic FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_expenses_updated_at BEFORE UPDATE ON expenses FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_purchase_orders_updated_at BEFORE UPDATE ON purchase_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_employees_updated_at BEFORE UPDATE ON employees FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_attendance_updated_at BEFORE UPDATE ON attendance FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_maintenance_updated_at BEFORE UPDATE ON maintenance FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

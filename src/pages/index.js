@@ -1,0 +1,9 @@
+export { default as LoginPage } from './LoginPage';
+export { default as DashboardPage } from './DashboardPage';
+export { default as ProcurementPage } from './ProcurementPage';
+export { default as ProductionPage } from './ProductionPage';
+export { default as InventoryPage } from './InventoryPage';
+export { default as MaintenancePage } from './MaintenancePage';
+export { default as SalesPage } from './SalesPage';
+export { default as FinancePage } from './FinancePage';
+export { default as SettingsPage } from './SettingsPage';
