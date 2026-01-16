@@ -35,23 +35,37 @@ export const updateStockFromWorksheet = async (worksheet, previousWorksheet = nu
             return;
         }
 
-        // Calculate stock change
+        // Calculate stock change (kg)
         let stockChange = 0;
+        let bagChange = 0;
 
         if (previousWorksheet) {
             // If updating existing worksheet, calculate the difference
             const previousProduction = previousWorksheet.actualProduction || 0;
             const newProduction = worksheet.actualProduction || 0;
             stockChange = newProduction - previousProduction;
+
+            // Calculate bag count change
+            const previousBags = previousWorksheet.bagCount || 0;
+            const newBags = worksheet.bagCount || 0;
+            bagChange = newBags - previousBags;
         } else {
             // If creating new worksheet, add the full production
             stockChange = worksheet.actualProduction || 0;
+            bagChange = worksheet.bagCount || 0;
         }
 
         // Only update if there's a change and worksheet is completed
-        if (stockChange !== 0 && worksheet.status === 'completed') {
-            // Update the stock quantity
+        if ((stockChange !== 0 || bagChange !== 0) && worksheet.status === 'completed') {
+            // Update the stock quantity (kg)
             finishedGoodsItem.stock = (finishedGoodsItem.stock || 0) + stockChange;
+
+            // Update bag count
+            finishedGoodsItem.bagCount = (finishedGoodsItem.bagCount || 0) + bagChange;
+            finishedGoodsItem.packagingType = worksheet.packagingType || 'karung';
+            finishedGoodsItem.kgPerBag = finishedGoodsItem.bagCount > 0
+                ? (finishedGoodsItem.stock / finishedGoodsItem.bagCount).toFixed(1)
+                : 0;
 
             // Save back to localStorage
             const updatedStockItems = stockItems.map(item =>
@@ -60,7 +74,7 @@ export const updateStockFromWorksheet = async (worksheet, previousWorksheet = nu
 
             localStorage.setItem(stockKey, JSON.stringify(updatedStockItems));
 
-            console.log(`Stock updated: ${stockChange > 0 ? '+' : ''}${stockChange} kg for ${finishedGoodsItem.name}`);
+            console.log(`Stock updated: ${stockChange > 0 ? '+' : ''}${stockChange} kg, ${bagChange > 0 ? '+' : ''}${bagChange} ${worksheet.packagingType || 'karung'} for ${finishedGoodsItem.name}`);
 
             // Create stock movement record
             await createStockMovement({
@@ -68,10 +82,12 @@ export const updateStockFromWorksheet = async (worksheet, previousWorksheet = nu
                 itemName: finishedGoodsItem.name,
                 type: 'production',
                 quantity: stockChange,
+                bagCount: bagChange,
+                packagingType: worksheet.packagingType || 'karung',
                 unit: finishedGoodsItem.unit,
                 reference: worksheet.worksheetNumber,
                 date: worksheet.productionDate,
-                notes: `Production from ${worksheet.machineName} - Shift ${worksheet.shift}`
+                notes: `Production from ${worksheet.machineName} - Shift ${worksheet.shift}${worksheet.bagCount ? ` (${worksheet.bagCount} ${worksheet.packagingType})` : ''}`
             });
         }
     } catch (error) {

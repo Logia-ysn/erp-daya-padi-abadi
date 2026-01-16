@@ -329,6 +329,7 @@ const WorksheetPage = () => {
                                 <TableHead>Machine</TableHead>
                                 <TableHead className="text-right">Target (kg)</TableHead>
                                 <TableHead className="text-right">Actual (kg)</TableHead>
+                                <TableHead className="text-right">Karung/Bag</TableHead>
                                 <TableHead className="text-right">Achievement</TableHead>
                                 <TableHead className="text-center">Downtime</TableHead>
                                 <TableHead>Status</TableHead>
@@ -369,6 +370,18 @@ const WorksheetPage = () => {
                                         </TableCell>
                                         <TableCell className="text-right font-medium">
                                             {formatNumber(worksheet.actualProduction)}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {worksheet.bagCount > 0 ? (
+                                                <div>
+                                                    <span className="font-medium">{formatNumber(worksheet.bagCount)}</span>
+                                                    <span className="text-xs text-[var(--color-text-secondary)] ml-1">
+                                                        {worksheet.packagingType || 'karung'}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-[var(--color-text-secondary)]">-</span>
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <span className={cn('font-bold',

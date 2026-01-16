@@ -22,6 +22,8 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
         machineName: '',
         targetProduction: 0,
         actualProduction: 0,
+        bagCount: 0,
+        packagingType: 'karung', // karung or jumbobag
         downtimes: [],
         status: 'in_progress',
     });
@@ -52,6 +54,8 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                 machineName: '',
                 targetProduction: 0,
                 actualProduction: 0,
+                bagCount: 0,
+                packagingType: 'karung',
                 downtimes: [],
                 status: 'in_progress',
             });
@@ -120,6 +124,10 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
 
     const achievementRate = form.targetProduction > 0
         ? ((form.actualProduction / form.targetProduction) * 100).toFixed(1)
+        : 0;
+
+    const kgPerBag = form.bagCount > 0 && form.actualProduction > 0
+        ? (form.actualProduction / form.bagCount).toFixed(1)
         : 0;
 
     const downtimeCategories = [
@@ -228,6 +236,38 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                     </div>
                 </div>
 
+                {/* Packaging / Pengemasan */}
+                <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-3 text-[var(--color-primary)]">📦 Pengemasan</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div>
+                            <Label>Jenis Kemasan</Label>
+                            <Select value={form.packagingType} onChange={(e) => handleChange('packagingType', e.target.value)} disabled={isView}>
+                                <option value="karung">Karung</option>
+                                <option value="jumbobag">Jumbo Bag</option>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Jumlah {form.packagingType === 'karung' ? 'Karung' : 'Jumbo Bag'}</Label>
+                            <Input type="number" min="0" value={form.bagCount} onChange={(e) => handleChange('bagCount', Number(e.target.value))} disabled={isView} placeholder="0" />
+                        </div>
+                        <div>
+                            <Label>Berat per {form.packagingType === 'karung' ? 'Karung' : 'Bag'}</Label>
+                            <div className="h-10 px-3 py-2 rounded-md border border-[var(--color-border)] bg-gray-50 flex items-center">
+                                <span className="font-medium text-[var(--color-primary)]">{kgPerBag} kg</span>
+                                <span className="text-[var(--color-text-secondary)] text-sm ml-1">/ {form.packagingType === 'karung' ? 'karung' : 'bag'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {form.bagCount > 0 && form.actualProduction > 0 && (
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                                📊 <strong>Ringkasan:</strong> {form.actualProduction.toLocaleString()} kg dalam {form.bagCount.toLocaleString()} {form.packagingType} ({kgPerBag} kg/{form.packagingType === 'karung' ? 'karung' : 'bag'})
+                            </p>
+                        </div>
+                    )}
+                </div>
+
                 {/* Downtime Management */}
                 <div className="mb-6">
                     <h3 className="text-lg font-semibold mb-3 text-[var(--color-primary)]">⚠️ Downtime Records</h3>
@@ -329,6 +369,7 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                     </div>
                     <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
                         Target: {form.targetProduction} kg • Actual: {form.actualProduction} kg
+                        {form.bagCount > 0 && ` • ${form.bagCount} ${form.packagingType}`}
                     </div>
                 </div>
 

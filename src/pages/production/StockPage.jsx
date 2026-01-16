@@ -276,7 +276,8 @@ const StockPage = () => {
                                     <th className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Kode</th>
                                     <th className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Nama Item</th>
                                     <th className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Kategori</th>
-                                    <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Stok</th>
+                                    <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Stok (kg)</th>
+                                    <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Karung/Bag</th>
                                     <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Min/Max</th>
                                     <th className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Lokasi</th>
                                     <th className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Status</th>
@@ -293,7 +294,23 @@ const StockPage = () => {
                                             <td className="py-3 px-4">
                                                 <span className="px-2 py-1 bg-gray-100 rounded text-xs">{getCategoryLabel(item.category)}</span>
                                             </td>
-                                            <td className="py-3 px-4 text-right font-bold">{item.stock.toLocaleString()} {item.unit}</td>
+                                            <td className="py-3 px-4 text-right">
+                                                <span className="font-bold">{item.stock?.toLocaleString()}</span>
+                                                <span className="text-gray-500 ml-1">{item.unit}</span>
+                                            </td>
+                                            <td className="py-3 px-4 text-right">
+                                                {item.bagCount > 0 ? (
+                                                    <div>
+                                                        <span className="font-medium">{item.bagCount?.toLocaleString()}</span>
+                                                        <span className="text-xs text-gray-500 ml-1">{item.packagingType || 'karung'}</span>
+                                                        {item.kgPerBag > 0 && (
+                                                            <p className="text-xs text-gray-400">{item.kgPerBag} kg/{item.packagingType || 'karung'}</p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400">-</span>
+                                                )}
+                                            </td>
                                             <td className="py-3 px-4 text-right text-sm text-gray-500">{item.minStock} / {item.maxStock}</td>
                                             <td className="py-3 px-4 text-sm">{item.location}</td>
                                             <td className="py-3 px-4">
@@ -323,7 +340,7 @@ const StockPage = () => {
                                     );
                                 }) : (
                                     <tr>
-                                        <td colSpan={8} className="py-8 text-center text-gray-400">Tidak ada data</td>
+                                        <td colSpan={9} className="py-8 text-center text-gray-400">Tidak ada data</td>
                                     </tr>
                                 )}
                             </tbody>
