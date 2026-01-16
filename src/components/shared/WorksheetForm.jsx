@@ -133,42 +133,60 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
         : 0;
 
     // OEE Calculation
-    // Availability = (Planned Production Time - Downtime) / Planned Production Time
-    // Performance = Actual Production / Target Production
+    // Availability = (Waktu Kerja Total - Waktu Istirahat - Waktu Downtime) / (Waktu Kerja Total - Waktu Istirahat)
+    // Performance = Aktual Produksi / Target Produksi
     // Quality = Quality Rate (user input)
     // OEE = Availability × Performance × Quality
     const calculateOEE = () => {
         const totalDowntimeHours = parseFloat(calculateTotalDowntime()) || 0;
 
-        // Calculate planned production time (work hours minus break)
+        // Calculate total work time (from start to end)
         const workStart = new Date(`2000-01-01T${form.workStartTime}`);
         const workEnd = new Date(`2000-01-01T${form.workEndTime}`);
         const breakStart = new Date(`2000-01-01T${form.breakTime}`);
         const breakEnd = new Date(`2000-01-01T${form.breakEndTime}`);
 
-        let plannedHours = (workEnd - workStart) / (1000 * 60 * 60);
-        if (plannedHours < 0) plannedHours += 24; // Handle overnight shifts
+        // Total working hours
+        let totalWorkHours = (workEnd - workStart) / (1000 * 60 * 60);
+        if (totalWorkHours < 0) totalWorkHours += 24; // Handle overnight shifts
 
-        const breakHours = (breakEnd - breakStart) / (1000 * 60 * 60);
-        plannedHours = plannedHours - breakHours;
+        // Break time
+        let breakHours = (breakEnd - breakStart) / (1000 * 60 * 60);
+        if (breakHours < 0) breakHours += 24; // Handle overnight break
 
-        // Availability
-        const availability = plannedHours > 0 ? ((plannedHours - totalDowntimeHours) / plannedHours) * 100 : 0;
+        // Planned Production Time = Total Work Time - Break Time
+        const plannedProductionTime = totalWorkHours - breakHours;
 
-        // Performance
-        const performance = form.targetProduction > 0 ? (form.actualProduction / form.targetProduction) * 100 : 0;
+        // Actual Production Time = Planned Production Time - Downtime
+        const actualProductionTime = plannedProductionTime - totalDowntimeHours;
+
+        // Availability = (Planned Time - Downtime) / Planned Time
+        const availability = plannedProductionTime > 0
+            ? (actualProductionTime / plannedProductionTime) * 100
+            : 0;
+
+        // Performance = Actual Production / Target Production (can exceed 100%)
+        const performance = form.targetProduction > 0
+            ? (form.actualProduction / form.targetProduction) * 100
+            : 0;
 
         // Quality (from user input)
         const quality = form.qualityRate || 100;
 
-        // OEE
-        const oee = (Math.min(availability, 100) / 100) * (Math.min(performance, 100) / 100) * (quality / 100) * 100;
+        // OEE = Availability × Performance × Quality
+        // Note: Use actual values (can be > 100% for performance)
+        const oee = (Math.max(0, Math.min(availability, 100)) / 100) *
+            (Math.max(0, performance) / 100) *
+            (Math.max(0, Math.min(quality, 100)) / 100) * 100;
 
         return {
-            availability: Math.min(availability, 100).toFixed(1),
-            performance: Math.min(performance, 100).toFixed(1),
-            quality: quality.toFixed(1),
-            oee: oee.toFixed(1)
+            availability: Math.max(0, availability).toFixed(1),
+            performance: Math.max(0, performance).toFixed(1),
+            quality: Math.max(0, quality).toFixed(1),
+            oee: Math.max(0, oee).toFixed(1),
+            plannedTime: plannedProductionTime.toFixed(1),
+            actualTime: actualProductionTime.toFixed(1),
+            downtime: totalDowntimeHours.toFixed(1)
         };
     };
 
@@ -354,9 +372,15 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                             </div>
                         </div>
                     </div>
-                    <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-1">
                         <p className="text-xs text-gray-600">
-                            <strong>OEE Formula:</strong> Availability ({oeeData.availability}%) × Performance ({oeeData.performance}%) × Quality ({oeeData.quality}%) = <strong>{oeeData.oee}%</strong>
+                            <strong>Availability:</strong> (Waktu Kerja {oeeData.plannedTime}h - Downtime {oeeData.downtime}h) / Waktu Kerja {oeeData.plannedTime}h = <strong>{oeeData.availability}%</strong>
+                        </p>
+                        <p className="text-xs text-gray-600">
+                            <strong>Performance:</strong> Aktual {form.actualProduction.toLocaleString()} kg / Target {form.targetProduction.toLocaleString()} kg = <strong>{oeeData.performance}%</strong>
+                        </p>
+                        <p className="text-xs text-gray-600">
+                            <strong>OEE:</strong> {oeeData.availability}% × {oeeData.performance}% × {oeeData.quality}% = <strong className="text-[var(--color-primary)]">{oeeData.oee}%</strong>
                         </p>
                     </div>
                 </div>
