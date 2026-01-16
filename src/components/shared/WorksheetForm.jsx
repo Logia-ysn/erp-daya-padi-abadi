@@ -24,6 +24,7 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
         actualProduction: 0,
         bagCount: 0,
         packagingType: 'karung', // karung or jumbobag
+        qualityRate: 100, // Quality percentage for OEE
         downtimes: [],
         status: 'in_progress',
     });
@@ -56,6 +57,7 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                 actualProduction: 0,
                 bagCount: 0,
                 packagingType: 'karung',
+                qualityRate: 100,
                 downtimes: [],
                 status: 'in_progress',
             });
@@ -129,6 +131,48 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
     const kgPerBag = form.bagCount > 0 && form.actualProduction > 0
         ? (form.actualProduction / form.bagCount).toFixed(1)
         : 0;
+
+    // OEE Calculation
+    // Availability = (Planned Production Time - Downtime) / Planned Production Time
+    // Performance = Actual Production / Target Production
+    // Quality = Quality Rate (user input)
+    // OEE = Availability × Performance × Quality
+    const calculateOEE = () => {
+        const totalDowntimeHours = parseFloat(calculateTotalDowntime()) || 0;
+
+        // Calculate planned production time (work hours minus break)
+        const workStart = new Date(`2000-01-01T${form.workStartTime}`);
+        const workEnd = new Date(`2000-01-01T${form.workEndTime}`);
+        const breakStart = new Date(`2000-01-01T${form.breakTime}`);
+        const breakEnd = new Date(`2000-01-01T${form.breakEndTime}`);
+
+        let plannedHours = (workEnd - workStart) / (1000 * 60 * 60);
+        if (plannedHours < 0) plannedHours += 24; // Handle overnight shifts
+
+        const breakHours = (breakEnd - breakStart) / (1000 * 60 * 60);
+        plannedHours = plannedHours - breakHours;
+
+        // Availability
+        const availability = plannedHours > 0 ? ((plannedHours - totalDowntimeHours) / plannedHours) * 100 : 0;
+
+        // Performance
+        const performance = form.targetProduction > 0 ? (form.actualProduction / form.targetProduction) * 100 : 0;
+
+        // Quality (from user input)
+        const quality = form.qualityRate || 100;
+
+        // OEE
+        const oee = (Math.min(availability, 100) / 100) * (Math.min(performance, 100) / 100) * (quality / 100) * 100;
+
+        return {
+            availability: Math.min(availability, 100).toFixed(1),
+            performance: Math.min(performance, 100).toFixed(1),
+            quality: quality.toFixed(1),
+            oee: oee.toFixed(1)
+        };
+    };
+
+    const oeeData = calculateOEE();
 
     const downtimeCategories = [
         { value: 'mechanical', label: 'Mechanical Failure' },
@@ -266,6 +310,55 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                             </p>
                         </div>
                     )}
+                </div>
+
+                {/* Quality & OEE */}
+                <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-3 text-[var(--color-primary)]">✅ Quality & OEE</h3>
+                    <div className="grid grid-cols-4 gap-4">
+                        <div>
+                            <Label required>Quality Rate (%)</Label>
+                            <Input
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                value={form.qualityRate}
+                                onChange={(e) => handleChange('qualityRate', Math.min(100, Math.max(0, Number(e.target.value))))}
+                                disabled={isView}
+                                placeholder="100"
+                            />
+                        </div>
+                        <div>
+                            <Label>Availability</Label>
+                            <div className="h-10 px-3 py-2 rounded-md border border-[var(--color-border)] bg-gray-50 flex items-center">
+                                <span className={`font-medium ${parseFloat(oeeData.availability) >= 85 ? 'text-green-600' : parseFloat(oeeData.availability) >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                    {oeeData.availability}%
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <Label>Performance</Label>
+                            <div className="h-10 px-3 py-2 rounded-md border border-[var(--color-border)] bg-gray-50 flex items-center">
+                                <span className={`font-medium ${parseFloat(oeeData.performance) >= 85 ? 'text-green-600' : parseFloat(oeeData.performance) >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                    {oeeData.performance}%
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <Label>OEE</Label>
+                            <div className={`h-10 px-3 py-2 rounded-md border-2 flex items-center ${parseFloat(oeeData.oee) >= 85 ? 'border-green-500 bg-green-50' : parseFloat(oeeData.oee) >= 70 ? 'border-yellow-500 bg-yellow-50' : 'border-red-500 bg-red-50'}`}>
+                                <span className={`font-bold text-lg ${parseFloat(oeeData.oee) >= 85 ? 'text-green-700' : parseFloat(oeeData.oee) >= 70 ? 'text-yellow-700' : 'text-red-700'}`}>
+                                    {oeeData.oee}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <p className="text-xs text-gray-600">
+                            <strong>OEE Formula:</strong> Availability ({oeeData.availability}%) × Performance ({oeeData.performance}%) × Quality ({oeeData.quality}%) = <strong>{oeeData.oee}%</strong>
+                        </p>
+                    </div>
                 </div>
 
                 {/* Downtime Management */}
