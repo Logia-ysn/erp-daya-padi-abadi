@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { storage, generateId } from '@/lib/utils';
 import { useFactory } from '@/contexts/FactoryContext';
 
@@ -19,27 +19,40 @@ export function useFactoryCrud(storageKey, initialData = []) {
     const loadItems = useCallback(() => {
         const stored = storage.get(storageKey);
         if (stored && stored.length > 0) {
-            setAllItems(stored);
-        } else {
-            // Initialize with initial data (add factoryId if missing)
-            const withFactory = initialData.map(item => ({
+            // Migrate existing data - add factoryId if missing
+            const migrated = stored.map(item => ({
                 ...item,
-                factoryId: item.factoryId || activeFactory?.id || 'factory_subang'
+                factoryId: item.factoryId || 'factory_subang' // Default to Subang for existing data
+            }));
+            // Save migrated data back
+            if (stored.some(item => !item.factoryId)) {
+                storage.set(storageKey, migrated);
+            }
+            setAllItems(migrated);
+        } else {
+            // Initialize with initial data (add factoryId)
+            const withFactory = initialData.map((item, index) => ({
+                ...item,
+                // Distribute mock data: even index = Subang, odd = Indramayu
+                factoryId: item.factoryId || (index % 2 === 0 ? 'factory_subang' : 'factory_indramayu')
             }));
             storage.set(storageKey, withFactory);
             setAllItems(withFactory);
         }
-    }, [storageKey, initialData, activeFactory?.id]);
+    }, [storageKey, initialData]);
 
-    // Load on mount and when storage key changes
+    // Load on mount
     useEffect(() => {
         loadItems();
     }, [loadItems]);
 
-    // Filter items by active factory
-    const items = allItems.filter(item =>
-        !item.factoryId || item.factoryId === activeFactory?.id
-    );
+    // Filter items by active factory - useMemo to recalculate when factory changes
+    const items = useMemo(() => {
+        if (!activeFactory?.id) return allItems;
+        return allItems.filter(item =>
+            item.factoryId === activeFactory.id
+        );
+    }, [allItems, activeFactory?.id]);
 
     const refresh = useCallback(() => {
         loadItems();
