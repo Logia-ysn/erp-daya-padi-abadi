@@ -33,6 +33,7 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
         startTime: '',
         endTime: '',
         category: 'mechanical',
+        type: 'corrective', // preventive, planned, corrective
         description: '',
     });
 
@@ -104,7 +105,7 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                 ...prev,
                 downtimes: [...prev.downtimes, { ...currentDowntime, id: Date.now() }]
             }));
-            setCurrentDowntime({ startTime: '', endTime: '', category: 'mechanical', description: '' });
+            setCurrentDowntime({ startTime: '', endTime: '', category: 'mechanical', type: 'corrective', description: '' });
         }
     };
 
@@ -196,10 +197,23 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
         { value: 'mechanical', label: 'Mechanical Failure' },
         { value: 'electrical', label: 'Electrical Issue' },
         { value: 'material', label: 'Material Shortage' },
-        { value: 'maintenance', label: 'Scheduled Maintenance' },
+        { value: 'setup', label: 'Setup/Changeover' },
+        { value: 'tooling', label: 'Tooling Change' },
+        { value: 'cleaning', label: 'Cleaning' },
+        { value: 'lubrication', label: 'Lubrication' },
+        { value: 'inspection', label: 'Inspection' },
+        { value: 'calibration', label: 'Calibration' },
         { value: 'operator', label: 'Operator Issue' },
         { value: 'quality', label: 'Quality Control' },
+        { value: 'waiting', label: 'Waiting (Material/Approval)' },
+        { value: 'power', label: 'Power Outage' },
         { value: 'other', label: 'Other' },
+    ];
+
+    const downtimeTypes = [
+        { value: 'preventive', label: 'Preventive', color: 'bg-blue-100 text-blue-700' },
+        { value: 'planned', label: 'Planned', color: 'bg-green-100 text-green-700' },
+        { value: 'corrective', label: 'Corrective', color: 'bg-red-100 text-red-700' },
     ];
 
     return (
@@ -392,7 +406,7 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                     {!isView && (
                         <div className="border border-[var(--color-border)] rounded-lg p-4 bg-gray-50 mb-4">
                             <h4 className="font-medium mb-3 text-sm">Add Downtime</h4>
-                            <div className="grid grid-cols-5 gap-3 items-end">
+                            <div className="grid grid-cols-6 gap-3 items-end">
                                 <div>
                                     <Label>Start Time</Label>
                                     <Input type="time" value={currentDowntime.startTime} onChange={(e) => setCurrentDowntime(prev => ({ ...prev, startTime: e.target.value }))} />
@@ -400,6 +414,14 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                                 <div>
                                     <Label>End Time</Label>
                                     <Input type="time" value={currentDowntime.endTime} onChange={(e) => setCurrentDowntime(prev => ({ ...prev, endTime: e.target.value }))} />
+                                </div>
+                                <div>
+                                    <Label>Type</Label>
+                                    <Select value={currentDowntime.type} onChange={(e) => setCurrentDowntime(prev => ({ ...prev, type: e.target.value }))}>
+                                        {downtimeTypes.map(type => (
+                                            <option key={type.value} value={type.value}>{type.label}</option>
+                                        ))}
+                                    </Select>
                                 </div>
                                 <div>
                                     <Label>Category</Label>
@@ -411,7 +433,7 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                                 </div>
                                 <div>
                                     <Label>Description</Label>
-                                    <Input value={currentDowntime.description} onChange={(e) => setCurrentDowntime(prev => ({ ...prev, description: e.target.value }))} placeholder="Explain the issue..." />
+                                    <Input value={currentDowntime.description} onChange={(e) => setCurrentDowntime(prev => ({ ...prev, description: e.target.value }))} placeholder="Explain..." />
                                 </div>
                                 <div>
                                     <Button type="button" onClick={handleAddDowntime} size="sm" variant="outline">
@@ -432,7 +454,7 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
 
                                 return (
                                     <div key={dt.id} className="flex items-center gap-3 p-3 border border-[var(--color-border)] rounded-lg bg-white">
-                                        <div className="flex-1 grid grid-cols-5 gap-3 text-sm">
+                                        <div className="flex-1 grid grid-cols-6 gap-3 text-sm">
                                             <div>
                                                 <span className="text-[var(--color-text-secondary)] text-xs">Time</span>
                                                 <p className="font-medium">{dt.startTime} - {dt.endTime}</p>
@@ -442,12 +464,18 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                                                 <p className="font-medium text-orange-600">{duration} hours</p>
                                             </div>
                                             <div>
+                                                <span className="text-[var(--color-text-secondary)] text-xs">Type</span>
+                                                <p className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${downtimeTypes.find(t => t.value === dt.type)?.color || 'bg-gray-100 text-gray-700'}`}>
+                                                    {downtimeTypes.find(t => t.value === dt.type)?.label || dt.type}
+                                                </p>
+                                            </div>
+                                            <div>
                                                 <span className="text-[var(--color-text-secondary)] text-xs">Category</span>
-                                                <p className="font-medium capitalize">{downtimeCategories.find(c => c.value === dt.category)?.label}</p>
+                                                <p className="font-medium text-xs">{downtimeCategories.find(c => c.value === dt.category)?.label}</p>
                                             </div>
                                             <div className="col-span-2">
                                                 <span className="text-[var(--color-text-secondary)] text-xs">Description</span>
-                                                <p className="font-medium">{dt.description}</p>
+                                                <p className="font-medium text-xs truncate">{dt.description}</p>
                                             </div>
                                         </div>
                                         {!isView && (

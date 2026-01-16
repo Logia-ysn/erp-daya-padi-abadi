@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import FactorySelector from '@/components/shared/FactorySelector';
 
 const Header = ({ onMenuClick }) => {
     const { t, i18n } = useTranslation();
@@ -64,6 +65,11 @@ const Header = ({ onMenuClick }) => {
                         )}
                     />
                 </div>
+            </div>
+
+            {/* Factory Selector */}
+            <div className="hidden md:block mx-4">
+                <FactorySelector />
             </div>
 
             {/* Right Actions */}

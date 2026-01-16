@@ -2,6 +2,36 @@
 
 Semua perubahan penting pada proyek ini akan didokumentasikan di file ini.
 
+## [0.3.0] - 2026-01-15
+
+### ✨ Fitur Baru
+
+#### Multi-Factory System
+- **Factory Selector**: Dropdown di header untuk memilih factory aktif
+- **Factory Management**: Tambah factory baru (contoh: Factory Subang, Factory Indramayu)
+- **Data Terpisah**: Setiap factory memiliki data tersendiri
+- **Factory Context**: State management untuk multi-factory
+- **Default Factories**: PT Daya Padi Abadi - Factory Subang & Indramayu
+
+#### Downtime Management (Enhanced)
+- **Downtime Type**: Kategori jenis downtime:
+  - Preventive (biru) - Perawatan pencegahan
+  - Planned (hijau) - Downtime terencana  
+  - Corrective (merah) - Perbaikan kerusakan
+- **Expanded Categories**: 14 kategori downtime:
+  - Mechanical Failure, Electrical Issue, Material Shortage
+  - Setup/Changeover, Tooling Change, Cleaning
+  - Lubrication, Inspection, Calibration
+  - Operator Issue, Quality Control, Waiting
+  - Power Outage, Other
+- **Visual Badge**: Type ditampilkan dengan warna yang sesuai
+
+### 🔧 Peningkatan
+- Layout downtime input form diperluas menjadi 6 kolom
+- Downtime list menampilkan Type dengan badge warna
+
+---
+
 ## [0.2.0] - 2026-01-15
 
 ### ✨ Fitur Baru

@@ -6,3 +6,4 @@ export { default as MachineForm } from './MachineForm';
 export { default as ProductionForm } from './ProductionForm';
 export { default as WorksheetForm } from './WorksheetForm';
 export { default as SalesOrderForm } from './SalesOrderForm';
+export { default as FactorySelector } from './FactorySelector';
