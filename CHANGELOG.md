@@ -2,6 +2,36 @@
 
 Semua perubahan penting pada proyek ini akan didokumentasikan di file ini.
 
+## [0.3.3] - 2026-01-16
+
+### ✅ Verifikasi Integrasi Multi-Factory
+
+#### Modul Produksi - Data Separation Verified
+Semua modul produksi sudah terintegrasi dengan multi-factory:
+
+| Modul | Storage Key | Factory Filter |
+|-------|------------|----------------|
+| Worksheets | `erp_worksheets` | ✅ |
+| Machines | `erp_machines` | ✅ |
+| Maintenance | `erp_maintenance` | ✅ |
+| Stock | `erp_production_stock` | ✅ |
+| Inventory | `erp_inventory` | ✅ |
+
+#### Integrasi Mesin → Worksheet
+- **Maintenance Page**: Tombol "Tambah Mesin" untuk menambah mesin baru
+- **MachineForm**: Field kategori (Production/Supporting)
+- **WorksheetForm**: Dropdown mesin hanya menampilkan mesin **production** 
+- **Auto-sync**: Mesin yang ditambahkan di Maintenance langsung muncul di Worksheet
+
+#### Alur Kerja:
+1. Pilih Factory (contoh: Factory Subang)
+2. Tambahkan mesin baru di **Maintenance** → kategori Production
+3. Buka **Production > Worksheet** → mesin baru muncul di dropdown
+4. Buat worksheet dengan mesin tersebut
+5. Switch ke Factory Indramayu → mesin Subang tidak muncul ✅
+
+---
+
 ## [0.3.2] - 2026-01-16
 
 ### ✨ Fitur Baru
