@@ -2,6 +2,25 @@
 
 Semua perubahan penting pada proyek ini akan didokumentasikan di file ini.
 
+## [0.3.2] - 2026-01-16
+
+### ✨ Fitur Baru
+
+#### Custom Downtime Categories
+- **Tambah Kategori Baru**: Klik tombol + di dropdown Category untuk menambahkan kategori downtime baru
+- **Kategori Tersimpan**: Kategori custom disimpan di localStorage, bisa digunakan kembali
+- **Default + Custom**: 14 kategori default + kategori tambahan dari user
+
+#### UPH (Unit Per Hour) Calculation
+- **Formula**: UPH = Aktual Produksi / Waktu Produksi Aktual (kg/jam)
+- **Tampilan**: UPH ditampilkan di section Quality & OEE
+- **Contoh**: 4850 kg / 6.5 jam = **746.2 kg/jam**
+
+### 🔧 Improvement
+- Formula breakdown ditampilkan lebih jelas untuk UPH
+
+---
+
 ## [0.3.1] - 2026-01-15
 
 ### ✨ Fitur Baru

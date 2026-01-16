@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Clock } from 'lucide-react';
 import { Modal, ModalFooter, Button, Input, Label, Select } from '@/components/ui';
+import { storage } from '@/lib/utils';
+
+const CUSTOM_CATEGORIES_KEY = 'erp_downtime_custom_categories';
 
 const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading, machines = [] }) => {
     const { t } = useTranslation();
@@ -36,6 +39,13 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
         type: 'corrective', // preventive, planned, corrective
         description: '',
     });
+
+    // Custom downtime categories
+    const [customCategories, setCustomCategories] = useState(() => {
+        return storage.get(CUSTOM_CATEGORIES_KEY) || [];
+    });
+    const [showAddCategory, setShowAddCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
 
     useEffect(() => {
         if (initialData) {
@@ -180,6 +190,11 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
             (Math.max(0, performance) / 100) *
             (Math.max(0, Math.min(quality, 100)) / 100) * 100;
 
+        // UPH (Unit Per Hour) = Actual Production / Actual Production Time
+        const uph = actualProductionTime > 0
+            ? (form.actualProduction / actualProductionTime).toFixed(1)
+            : 0;
+
         return {
             availability: Math.max(0, availability).toFixed(1),
             performance: Math.max(0, performance).toFixed(1),
@@ -187,13 +202,15 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
             oee: Math.max(0, oee).toFixed(1),
             plannedTime: plannedProductionTime.toFixed(1),
             actualTime: actualProductionTime.toFixed(1),
-            downtime: totalDowntimeHours.toFixed(1)
+            downtime: totalDowntimeHours.toFixed(1),
+            uph: uph // Unit Per Hour (kg/jam)
         };
     };
 
     const oeeData = calculateOEE();
 
-    const downtimeCategories = [
+    // Default downtime categories
+    const defaultCategories = [
         { value: 'mechanical', label: 'Mechanical Failure' },
         { value: 'electrical', label: 'Electrical Issue' },
         { value: 'material', label: 'Material Shortage' },
@@ -210,11 +227,33 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
         { value: 'other', label: 'Other' },
     ];
 
+    // Combine default + custom categories
+    const downtimeCategories = [
+        ...defaultCategories,
+        ...customCategories.map(c => ({ value: c.value, label: c.label }))
+    ];
+
     const downtimeTypes = [
         { value: 'preventive', label: 'Preventive', color: 'bg-blue-100 text-blue-700' },
         { value: 'planned', label: 'Planned', color: 'bg-green-100 text-green-700' },
         { value: 'corrective', label: 'Corrective', color: 'bg-red-100 text-red-700' },
     ];
+
+    // Add new custom category
+    const handleAddCategory = () => {
+        if (newCategoryName.trim()) {
+            const newCategory = {
+                value: newCategoryName.toLowerCase().replace(/\s+/g, '_'),
+                label: newCategoryName.trim()
+            };
+            const updated = [...customCategories, newCategory];
+            setCustomCategories(updated);
+            storage.set(CUSTOM_CATEGORIES_KEY, updated);
+            setCurrentDowntime(prev => ({ ...prev, category: newCategory.value }));
+            setNewCategoryName('');
+            setShowAddCategory(false);
+        }
+    };
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Edit Worksheet' : isView ? 'Worksheet Details' : 'New Production Worksheet'} size="2xl">
@@ -396,6 +435,11 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                         <p className="text-xs text-gray-600">
                             <strong>OEE:</strong> {oeeData.availability}% × {oeeData.performance}% × {oeeData.quality}% = <strong className="text-[var(--color-primary)]">{oeeData.oee}%</strong>
                         </p>
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                            <p className="text-xs text-gray-600">
+                                <strong>📊 UPH (Unit Per Hour):</strong> {form.actualProduction.toLocaleString()} kg / {oeeData.actualTime}h = <strong className="text-blue-600">{oeeData.uph} kg/jam</strong>
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -425,11 +469,33 @@ const WorksheetForm = ({ isOpen, onClose, onSubmit, initialData, mode, isLoading
                                 </div>
                                 <div>
                                     <Label>Category</Label>
-                                    <Select value={currentDowntime.category} onChange={(e) => setCurrentDowntime(prev => ({ ...prev, category: e.target.value }))}>
-                                        {downtimeCategories.map(cat => (
-                                            <option key={cat.value} value={cat.value}>{cat.label}</option>
-                                        ))}
-                                    </Select>
+                                    {!showAddCategory ? (
+                                        <div className="flex gap-1">
+                                            <Select
+                                                value={currentDowntime.category}
+                                                onChange={(e) => setCurrentDowntime(prev => ({ ...prev, category: e.target.value }))}
+                                                className="flex-1"
+                                            >
+                                                {downtimeCategories.map(cat => (
+                                                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                                                ))}
+                                            </Select>
+                                            <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowAddCategory(true)} title="Tambah kategori baru">
+                                                <Plus className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-1">
+                                            <Input
+                                                value={newCategoryName}
+                                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                                placeholder="Nama kategori baru"
+                                                className="flex-1"
+                                            />
+                                            <Button type="button" variant="outline" size="sm" onClick={handleAddCategory}>OK</Button>
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => { setShowAddCategory(false); setNewCategoryName(''); }}>×</Button>
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <Label>Description</Label>
