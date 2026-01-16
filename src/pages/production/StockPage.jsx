@@ -3,14 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { Package, AlertTriangle, ArrowUpRight, ArrowDownRight, Plus, Search, Edit, Trash2, Filter } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Modal, Input, Label } from '@/components/ui';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { useCrud, useModal, useConfirm } from '@/hooks/useCrud';
+import { useModal, useConfirm } from '@/hooks/useCrud';
+import { useFactoryCrud } from '@/hooks/useFactoryCrud';
 import { STORAGE_KEYS } from '@/services/api';
 import { mockStock } from '@/services/mockDataModules';
 import { cn, formatCurrency } from '@/lib/utils';
 
 const StockPage = () => {
     const { t } = useTranslation();
-    const { items: stockItems, isLoading, create, update, remove } = useCrud(STORAGE_KEYS.STOCK, mockStock);
+    // Use factory-aware CRUD - data filtered by active factory
+    const { items: stockItems, isLoading, create, update, remove } = useFactoryCrud(STORAGE_KEYS.STOCK, mockStock);
     const modal = useModal();
     const confirmDialog = useConfirm();
     const [filterCategory, setFilterCategory] = useState('all');

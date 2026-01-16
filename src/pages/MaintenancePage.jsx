@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, Wrench, Clock, AlertTriangle, CheckCircle, Settings, Calendar, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent, Button, Input, StatusBadge, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, ConfirmModal } from '@/components/ui';
 import { MachineForm } from '@/components/shared';
-import { useCrud, useModal, useConfirm } from '@/hooks';
+import { useModal, useConfirm } from '@/hooks';
+import { useFactoryCrud } from '@/hooks/useFactoryCrud';
 import { formatNumber, formatDateShort, formatCurrency, cn } from '@/lib/utils';
 import { mockMachines, mockMaintenance } from '@/services/mockData';
 
@@ -13,8 +14,9 @@ const MaintenancePage = () => {
     const [categoryFilter, setCategoryFilter] = useState('all'); // all, production, supporting
     const [searchTerm, setSearchTerm] = useState('');
 
-    const machines = useCrud('erp_machines', mockMachines);
-    const maintenance = useCrud('erp_maintenance', mockMaintenance);
+    // Use factory-aware CRUD - data filtered by active factory
+    const machines = useFactoryCrud('erp_machines', mockMachines);
+    const maintenance = useFactoryCrud('erp_maintenance', mockMaintenance);
     const machineModal = useModal();
     const confirmDialog = useConfirm();
 

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, MoreHorizontal, Star, Phone, MapPin, FileText, Truck, Edit, Trash2, Eye } from 'lucide-react';
 import { Card, CardContent, Button, Input, StatusBadge, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, ConfirmModal } from '@/components/ui';
 import { SupplierForm, PurchaseOrderForm } from '@/components/shared';
-import { useCrud, useModal, useConfirm } from '@/hooks';
+import { useModal, useConfirm } from '@/hooks';
+import { useFactoryCrud } from '@/hooks/useFactoryCrud';
 import { formatCurrency, formatDateShort, cn } from '@/lib/utils';
 import { mockSuppliers, mockPurchaseOrders } from '@/services/mockData';
 
@@ -12,9 +13,9 @@ const ProcurementPage = () => {
     const [activeTab, setActiveTab] = useState('suppliers');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // CRUD hooks
-    const suppliers = useCrud('erp_suppliers', mockSuppliers);
-    const purchaseOrders = useCrud('erp_purchase_orders', mockPurchaseOrders);
+    // Use factory-aware CRUD - data filtered by active factory
+    const suppliers = useFactoryCrud('erp_suppliers', mockSuppliers);
+    const purchaseOrders = useFactoryCrud('erp_purchase_orders', mockPurchaseOrders);
 
     // Modal states
     const supplierModal = useModal();

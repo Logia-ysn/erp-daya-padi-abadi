@@ -2,6 +2,32 @@
 
 Semua perubahan penting pada proyek ini akan didokumentasikan di file ini.
 
+## [0.3.1] - 2026-01-15
+
+### ✨ Fitur Baru
+
+#### Factory Data Separation (Like Excel Filter)
+- **`useFactoryCrud` Hook**: Hook baru untuk data filtering per factory
+- **Auto-inject factoryId**: Setiap record baru otomatis memiliki factoryId
+- **Filter otomatis**: Ketika switch factory, data langsung terfilter
+
+#### Modul yang Di-sync:
+- WorksheetPage - Worksheet terpisah per factory
+- StockPage - Stok terpisah per factory
+- MaintenancePage - Mesin terpisah per factory
+- InventoryPage - Inventory terpisah per factory
+- ProcurementPage - Supplier & PO terpisah per factory
+- SalesPage - Customer & Sales Order terpisah per factory
+
+### 🔧 Behavior
+| Aksi | Hasil |
+|------|-------|
+| Switch Factory | Data refresh dengan filter factory baru |
+| Create Record | `factoryId` otomatis ditambahkan |
+| View/Edit | Hanya tampil data factory aktif |
+
+---
+
 ## [0.3.0] - 2026-01-15
 
 ### ✨ Fitur Baru

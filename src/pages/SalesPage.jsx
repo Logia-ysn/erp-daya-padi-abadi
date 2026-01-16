@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, Users, FileText, Truck, Receipt, Building, Edit, Trash2, Eye } from 'lucide-react';
 import { Card, CardContent, Button, Input, StatusBadge, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, ConfirmModal } from '@/components/ui';
 import { CustomerForm, SalesOrderForm } from '@/components/shared';
-import { useCrud, useModal, useConfirm } from '@/hooks';
+import { useModal, useConfirm } from '@/hooks';
+import { useFactoryCrud } from '@/hooks/useFactoryCrud';
 import { formatCurrency, formatDateShort, cn } from '@/lib/utils';
 import { mockCustomers, mockSalesOrders } from '@/services/mockData';
 
@@ -12,8 +13,9 @@ const SalesPage = () => {
     const [activeTab, setActiveTab] = useState('customers');
     const [searchTerm, setSearchTerm] = useState('');
 
-    const customers = useCrud('erp_customers', mockCustomers);
-    const salesOrders = useCrud('erp_sales_orders', mockSalesOrders);
+    // Use factory-aware CRUD - data filtered by active factory
+    const customers = useFactoryCrud('erp_customers', mockCustomers);
+    const salesOrders = useFactoryCrud('erp_sales_orders', mockSalesOrders);
     const customerModal = useModal();
     const soModal = useModal();
     const confirmDialog = useConfirm();

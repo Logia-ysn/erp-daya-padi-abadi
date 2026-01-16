@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, Package, Warehouse, ArrowUpRight, ArrowDownRight, AlertTriangle, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent, Button, Input, Badge, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, ConfirmModal } from '@/components/ui';
 import { InventoryForm } from '@/components/shared';
-import { useCrud, useModal, useConfirm } from '@/hooks';
+import { useModal, useConfirm } from '@/hooks';
+import { useFactoryCrud } from '@/hooks/useFactoryCrud';
 import { formatNumber, formatCurrency, cn } from '@/lib/utils';
 import { mockInventory } from '@/services/mockData';
 
@@ -12,7 +13,8 @@ const InventoryPage = () => {
     const [activeTab, setActiveTab] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
-    const inventory = useCrud('erp_inventory', mockInventory);
+    // Use factory-aware CRUD - data filtered by active factory
+    const inventory = useFactoryCrud('erp_inventory', mockInventory);
     const itemModal = useModal();
     const confirmDialog = useConfirm();
 

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, FileText, Users, Clock, TrendingUp, Edit, Trash2, Eye, AlertCircle, X, Calendar } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, StatusBadge, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, ConfirmModal, Select, Label } from '@/components/ui';
 import { WorksheetForm } from '@/components/shared';
-import { useCrud, useModal, useConfirm } from '@/hooks';
+import { useModal, useConfirm } from '@/hooks';
+import { useFactoryCrud } from '@/hooks/useFactoryCrud';
 import { formatNumber, formatDateShort, cn } from '@/lib/utils';
 import { mockWorksheets, mockMachines } from '@/services/mockData';
 import { updateStockFromWorksheet, removeStockFromWorksheet } from '@/services/stockIntegration';
@@ -20,8 +21,9 @@ const WorksheetPage = () => {
         status: '',
     });
 
-    const worksheets = useCrud('erp_worksheets', mockWorksheets);
-    const machines = useCrud('erp_machines', mockMachines);
+    // Use factory-aware CRUD - data filtered by active factory
+    const worksheets = useFactoryCrud('erp_worksheets', mockWorksheets);
+    const machines = useFactoryCrud('erp_machines', mockMachines);
     const worksheetModal = useModal();
     const confirmDialog = useConfirm();
 
